@@ -66,12 +66,34 @@ class drop(object):
 		self.z = 3
 		self.speed = speed
 		self.current_jump = 0
+
 	def inc(self):
 		if (self.current_jump + 1 > self.speed):
 			self.current_jump = 0
 			self.z = self.z - 1
 		else:
 			self.current_jump = self.current_jump + 1
+
+class point(object):
+	"""docstring for point"""
+	def __init__(self):
+		super(point, self).__init__()
+		self.x = random.randint(0,3)
+		self.y = random.randint(0,3)
+		self.z = random.randint(0,3)
+
+	def attempt(self, coord, direction):
+		if direction != 0:
+			coord = coord + direction
+			if coord > 3 or coord < 0:
+				coord = coord - direction
+		return coord
+
+	def move(self):
+		self.x = self.attempt(self.x, random.randint(-1,1))
+		self.y = self.attempt(self.y, random.randint(-1,1))
+		self.z = self.attempt(self.z, random.randint(-1,1))
+		
 
 class animateCube(object):
 	"""docstring for animateCube"""
@@ -119,6 +141,23 @@ class animateCube(object):
 					drops.pop(i)
 			self.contoller.set_cube(l)
 
+	def points(self, count):
+		points = list()
+		for x in range(0, count):
+			points.append(point())
+		while (True):
+			sleep(0.05)
+			l = list()
+			for z in range(0,4):
+				l.insert(z, list())
+				for y in range(0,4):
+					l[z].insert(y, list())
+					for x in range(0,4):
+						l[z][y].insert(x, False)
+			for obj in points:
+				obj.move()
+				l[obj.z][obj.y][obj.x] = True
+			self.contoller.set_cube(l)
 
 if __name__ == "__main__":
 	leds = {
@@ -127,4 +166,4 @@ if __name__ == "__main__":
 	}
 	controller = Cube(leds, 0);
 	animations = animateCube(controller)
-	animations.wave()
+	animations.points(5)
