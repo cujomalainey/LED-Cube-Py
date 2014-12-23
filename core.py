@@ -92,15 +92,16 @@ class point(object):
 
 class animateCube(object):
 	"""docstring for animateCube"""
-	def __init__(self, contoller):
+	def __init__(self, controller):
 		super(animateCube, self).__init__()
-		self.contoller = contoller
+		self.controller = controller
 		random.seed(time())
+		self.alive = True
 
-	def wave(self):
+	def wave(self, delay = 0.1):
 		i = 0;
-		while (True):
-			sleep(0.1)
+		while (self.alive):
+			sleep(delay)
 			l = list()
 			for z in range(0,4):
 				l.insert(z, list())
@@ -113,12 +114,12 @@ class animateCube(object):
 					for x in range(0,4):
 						l[round(3 * math.sin((i + x + i * y * 0.1) * 0.3) ** 2)][y][x] = True
 			i = i + 1
-			self.contoller.set_cube(l)
+			self.controller.set_cube(l)
 	
 	def rain(self):
 		drops = list()
-		while (True):
-			sleep(0.01)
+		while (self.alive):
+			sleep(0.04)
 			l = list()
 			for z in range(0,4):
 				l.insert(z, list())
@@ -134,13 +135,13 @@ class animateCube(object):
 				obj.inc()
 				if obj.z < 0:
 					drops.pop(i)
-			self.contoller.set_cube(l)
+			self.controller.set_cube(l)
 
-	def points(self, count):
+	def points(self, count = 2):
 		points = list()
 		for x in range(0, count):
 			points.append(point())
-		while (True):
+		while (self.alive):
 			sleep(0.05)
 			l = list()
 			for z in range(0,4):
@@ -152,7 +153,7 @@ class animateCube(object):
 			for obj in points:
 				obj.move()
 				l[obj.z][obj.y][obj.x] = True
-			self.contoller.set_cube(l)
+			self.controller.set_cube(l)
 
 	def fade_verify(self, l):
 		current = l[0][0][0]
@@ -172,13 +173,34 @@ class animateCube(object):
 				for x in range(0,4):
 					l[z][y].insert(x, False)
 		flip = True
-		while (True):
+		while (self.alive):
 			sleep(0.01)
 			l[random.randint(0,3)][random.randint(0,3)][random.randint(0,3)] = flip
 			if self.fade_verify(l):
 				flip = not flip
-			self.contoller.set_cube(l)
+			self.controller.set_cube(l)
 
+	def swirl(self):
+		columns = [(0,0), (1,0), (2,0), (3,0), (3,1), (3,2), (3,3), (2,3), (1,3), (0,3), (0,2), (0,1), (1,1), (2,1), (2,2), (1,2)]
+		while (self.alive):
+			for i in range(0,3):
+				l = list()
+				for z in range(0,4):
+					l.insert(z, list())
+					for y in range(0,4):
+						l[z].insert(y, list())
+						for x in range(0,4):
+							l[z][y].insert(x, False)
+				for col in range(0,16):
+					for led in range(0,4):
+						if i == 0:
+							l[columns[col][0]][columns[col][1]][led] = True
+						elif i == 1:
+							l[columns[col][0]][led][columns[col][1]] = True
+						elif i == 2:
+							l[led][columns[col][0]][columns[col][1]] = True
+					self.controller.set_cube(l)
+					sleep(0.2)
 if __name__ == "__main__":
 	leds = {
 		"bottom":[[15,18,38,32],[31,22,29,35],[21,13,23,36],[19,11,33,16]],
@@ -186,4 +208,4 @@ if __name__ == "__main__":
 	}
 	controller = Cube(leds, 0);
 	animations = animateCube(controller)
-	animations.wave()
+	animations.swirl()
