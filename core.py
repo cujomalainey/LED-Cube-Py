@@ -48,14 +48,9 @@ class CubeRender(Thread):
 			for z, zval in enumerate(self.frame):
 				for y, yval in enumerate(zval):
 					for x, xval in enumerate(yval):
-						if (xval):
-							GPIO.output(self.leds["bottom"][x][y], True)
+						GPIO.output(self.leds["bottom"][x][y], xval)
 				GPIO.output(self.leds["layers"][z], True)
 				GPIO.output(self.leds["layers"][z], False)
-				for y, yval in enumerate(zval):
-					for x, xval in enumerate(yval):
-						if (xval):
-							GPIO.output(self.leds["bottom"][x][y], False)
 
 class drop(object):
 	"""docstring for drop"""
@@ -159,6 +154,31 @@ class animateCube(object):
 				l[obj.z][obj.y][obj.x] = True
 			self.contoller.set_cube(l)
 
+	def fade_verify(self, l):
+		current = l[0][0][0]
+		for z in range(0,4):
+			for y in range(0,4):
+				for x in range(0,4):
+					if current != l[z][y][x]:
+						return False
+		return True
+
+	def fade(self):
+		l = list()
+		for z in range(0,4):
+			l.insert(z, list())
+			for y in range(0,4):
+				l[z].insert(y, list())
+				for x in range(0,4):
+					l[z][y].insert(x, False)
+		flip = True
+		while (True):
+			sleep(0.01)
+			l[random.randint(0,3)][random.randint(0,3)][random.randint(0,3)] = flip
+			if self.fade_verify(l):
+				flip = not flip
+			self.contoller.set_cube(l)
+
 if __name__ == "__main__":
 	leds = {
 		"bottom":[[15,18,38,32],[31,22,29,35],[21,13,23,36],[19,11,33,16]],
@@ -166,4 +186,4 @@ if __name__ == "__main__":
 	}
 	controller = Cube(leds, 0);
 	animations = animateCube(controller)
-	animations.points(5)
+	animations.wave()
