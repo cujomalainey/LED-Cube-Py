@@ -1,7 +1,8 @@
 from threading import Thread
-import RPi.GPIO as GPIO
+from copy import deepcopy
 from time import sleep
 from time import time
+import RPi.GPIO as GPIO
 import random
 import math
 
@@ -43,14 +44,29 @@ class CubeRender(Thread):
 		self.on = True
 
 	def run(self):
-		while(self.on):
-			self.frame = self.nextFrame[:]
-			for z, zval in enumerate(self.frame):
-				for y, yval in enumerate(zval):
-					for x, xval in enumerate(yval):
-						GPIO.output(self.leds["bottom"][x][y], xval)
-				GPIO.output(self.leds["layers"][z], True)
-				GPIO.output(self.leds["layers"][z], False)
+		if self.mode == 0:
+			while(self.on):
+				self.frame = self.nextFrame[:]
+				for z, zval in enumerate(self.frame):
+					for y, yval in enumerate(zval):
+						for x, xval in enumerate(yval):
+							GPIO.output(self.leds["bottom"][x][y], xval)
+					GPIO.output(self.leds["layers"][z], True)
+					GPIO.output(self.leds["layers"][z], False)
+		else:
+			bitangle = [1,2,4,8]
+			while(self.on):
+				self.frame = deepcopy(self.nextFrame)
+				for angle in bitangle:
+					for i in range(0, angle):
+						for z, zval in enumerate(self.frame):
+							for y, yval in enumerate(zval):
+								for x, xval in enumerate(yval):
+									GPIO.output(self.leds["bottom"][x][y], xval % 2 == 1)
+									if (i + 1 == angle):
+										self.frame[z][y][x] = self.frame[z][y][x] >> 1
+							GPIO.output(self.leds["layers"][z], True)
+							GPIO.output(self.leds["layers"][z], False)
 
 class drop(object):
 	"""docstring for drop"""
@@ -201,11 +217,15 @@ class animateCube(object):
 							l[led][columns[col][0]][columns[col][1]] = True
 					self.controller.set_cube(l)
 					sleep(0.2)
+
+	def lines(self):
+		pass
+
 if __name__ == "__main__":
 	leds = {
 		"bottom":[[15,18,38,32],[31,22,29,35],[21,13,23,36],[19,11,33,16]],
 		"layers":[7,40,12,37]
 	}
-	controller = Cube(leds, 0);
+	controller = Cube(leds, 1);
 	animations = animateCube(controller)
 	animations.swirl()
